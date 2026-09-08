@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Buses - BusGo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <b>🚌 BusGo</b>
+    <nav>
+      <a href="/">Home</a>
+      <a href="bookings.html">My Bookings</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Available Buses</h1>
+    <div id="list">Loading...</div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    let p = new URLSearchParams(location.search);
+
+    async function load() {
+      let x = await api('/buses/search?' + p);
+
+      list.innerHTML = x.length
+        ? x.map(b => `
+          <div class="bus">
+            <div>
+              <h2>${b.bus_name}</h2>
+              <p>${b.bus_number} · ${b.bus_type}</p>
+            </div>
+            <div>
+              <b>${b.departure_time}</b>
+              <p>${b.source}</p>
+            </div>
+            <div>
+              <b>${b.arrival_time}</b>
+              <p>${b.destination}</p>
+            </div>
+            <div>
+              <b>₹${b.fare}</b>
+              <button onclick="pick(${b.id})">Select Seat</button>
+            </div>
+          </div>
+        `).join('')
+        : '<div class="card">No buses found.</div>';
+    }
+
+    function pick(id) {
+      if (!localStorage.token) {
+        return location = 'login.html';
+      }
+      location = `seats.html?bus=${id}&date=${p.get('date')}`;
+    }
+
+    load();
+  </script>
+</body>
+</html>

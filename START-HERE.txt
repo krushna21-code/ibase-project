@@ -1,0 +1,12 @@
+BUSGO QUICK START
+
+1. Install Node.js.
+2. Install/start XAMPP MySQL.
+3. Import database/bus_booking.sql into phpMyAdmin.
+4. Open Command Prompt in this project's server folder.
+5. Run: npm install
+6. Run: npm start
+7. Open: http://localhost:5000
+
+To make yourself admin, register on the website then run in phpMyAdmin:
+UPDATE users SET role='admin' WHERE email='YOUR_EMAIL';

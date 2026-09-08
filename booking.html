@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Booking - BusGo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <b>🚌 BusGo</b>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h1>Passenger Details</h1>
+      <div id="summary"></div>
+      <form id="f">
+        <input id="name" placeholder="Passenger name" required>
+        <input id="age" type="number" placeholder="Age" required>
+        <select id="gender" required>
+          <option value="">Gender</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
+        <input id="phone" placeholder="10 digit mobile" pattern="[0-9]{10}" required>
+        <button>Confirm Booking</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    const form = document.getElementById("f");
+    const nameInput = document.getElementById("name");
+    const ageInput = document.getElementById("age");
+    const genderInput = document.getElementById("gender");
+    const phoneInput = document.getElementById("phone");
+    const summary = document.getElementById("summary");
+
+    const b = JSON.parse(sessionStorage.getItem("booking") || "null");
+
+    if (!b) {
+      location.href = "/";
+    }
+
+    let bus;
+
+    async function load() {
+      try {
+        const x = await api("/buses/search?date=" + encodeURIComponent(b.date));
+        bus = x.find(y => y.id == b.busId);
+
+        if (!bus) {
+          summary.innerHTML = "<p>Bus not found.</p>";
+          return;
+        }
+
+        summary.innerHTML = `
+          <p>${bus.bus_name}: ${bus.source} → ${bus.destination}</p>
+          <p>Seats: ${b.seats.join(", ")} · Total: ₹${b.seats.length * Number(bus.fare)}</p>
+        `;
+      } catch (e) {
+        summary.innerHTML = `<p>${e.message}</p>`;
+      }
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+
+      try {
+        const data = {
+          bus_id: b.busId,
+          passenger_name: nameInput.value.trim(),
+          passenger_age: Number(ageInput.value),
+          passenger_gender: genderInput.value,
+          passenger_phone: phoneInput.value.trim(),
+          seats: b.seats
+        };
+
+        console.log("Booking data:", data);
+
+        const x = await api("/bookings", {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+
+        alert("Booking ID: " + x.bookingId);
+
+        sessionStorage.removeItem("booking");
+        location.href = "bookings.html";
+
+      } catch (e) {
+        alert(e.message);
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>

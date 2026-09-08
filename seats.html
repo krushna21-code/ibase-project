@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Seats - BusGo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <b>🚌 BusGo</b>
+  </header>
+
+  <main class="container">
+    <h1>Select Seats</h1>
+    <div id="info"></div>
+    <div id="seats" class="seats"></div>
+    <div class="card">
+      <b>Selected: </b>
+      <span id="chosen">None</span>
+      <h2 id="total">₹0</h2>
+      <button onclick="next()">Continue</button>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    let q = new URLSearchParams(location.search),
+        id = q.get('bus'),
+        date = q.get('date'),
+        bus,
+        sel = [];
+
+    async function load() {
+      let bs = await api('/buses/search?date=' + date);
+      bus = bs.find(x => x.id == id);
+
+      let used = await api('/bookings/seats/' + id);
+
+      info.innerHTML = `
+        <div class="card">
+          <h2>${bus.bus_name}</h2>
+          ${bus.source} → ${bus.destination} · ₹${bus.fare}
+        </div>
+      `;
+
+      for (let i = 1; i <= bus.total_seats; i++) {
+        let b = document.createElement('button');
+        b.textContent = i;
+        b.className = 'seat';
+
+        if (used.includes('' + i)) {
+          b.disabled = true;
+          b.classList.add('booked');
+        } else {
+          b.onclick = () => {
+            let s = '' + i;
+            if (sel.includes(s)) {
+              sel = sel.filter(x => x !== s);
+              b.classList.remove('selected');
+            } else {
+              sel.push(s);
+              b.classList.add('selected');
+            }
+            chosen.textContent = sel.join(', ') || 'None';
+            total.textContent = '₹' + sel.length * bus.fare;
+          };
+        }
+
+        seats.appendChild(b);
+      }
+    }
+
+    function next() {
+      if (!sel.length) return alert('Select a seat');
+      sessionStorage.booking = JSON.stringify({ busId: id, date, seats: sel });
+      location = 'booking.html';
+    }
+
+    load();
+  </script>
+</body>
+</html>
+`

@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Bookings - BusGo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <b>🚌 BusGo</b>
+    <nav>
+      <a href="/">Home</a>
+      <button onclick="logout()">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>My Bookings</h1>
+    <div id="list">Loading...</div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    auth();
+
+    async function load() {
+      let x = await api('/bookings/my');
+
+      list.innerHTML = x.length
+        ? x.map(b => `
+          <div class="card booking">
+            <div>
+              <h2>${b.booking_id}</h2>
+              <h3>${b.bus_name}</h3>
+              <p>${b.source} → ${b.destination} · ${b.journey_date}</p>
+              <p>Passenger: ${b.passenger_name} · Seats: ${b.seats}</p>
+            </div>
+            <div>
+              <h2>₹${b.total_amount}</h2>
+              <b>${b.status}</b>
+              ${b.status === 'Confirmed'
+                ? `<br><button onclick="cancel(${b.id})">Cancel</button>`
+                : ''}
+            </div>
+          </div>
+        `).join('')
+        : '<div class="card">No bookings.</div>';
+    }
+
+    async function cancel(id) {
+      if (confirm('Cancel booking?')) {
+        await api('/bookings/cancel/' + id, { method: 'PUT' });
+        load();
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
